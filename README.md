@@ -4,7 +4,7 @@ completed as part of
 the *Agentic AI & RAG Engineering* programme.
 
 ## Corpus
-<one-sentence description from Step 1a — what corpus, source>
+Public regulatory PDFs (a SEBI / RBI / GDPR document set), source: https://www.sebi.gov.in/legal.html
 
 ## Structure
 - `src/` — application code
@@ -20,5 +20,5 @@ This project is using `UV` as depdency manager. To run this project do the follo
 
 ## Week 1
 - [x] Set up repo + secrets discipline
-- [ ] Build `hello_llm.py` (Lab Step 2)
+- [x] Build `hello_llm.py` (Lab Step 2)
 - [ ] Write ADR v1 (Lab Step 3)
