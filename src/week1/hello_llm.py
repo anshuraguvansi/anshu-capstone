@@ -1,5 +1,6 @@
-from openai import OpenAI
 import sys
+
+from openai import OpenAI
 
 client = OpenAI()
 
