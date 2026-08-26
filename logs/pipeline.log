@@ -1,0 +1,1 @@
+{"ts": 1787725506.095, "level": "INFO", "msg": "smoke test \u2014 settings: {'questions_csv': 'data/questions.csv', 'results_json': 'result.json', 'results_db': 'result.db', 'batch_size': 5, 'fail_rate': 0.0, 'model': 'gpt-4o-mini', 'use_fake': True}", "logger": "pipeline"}
