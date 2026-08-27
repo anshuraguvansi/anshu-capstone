@@ -22,3 +22,20 @@ This project is using `UV` as depdency manager. To run this project do the follo
 - [x] Set up repo + secrets discipline
 - [x] Build `hello_llm.py` (Lab Step 2)
 - [ ] Write ADR v1 (Lab Step 3)
+
+## Week 2
+- [x] src/pipeline/ package with pipeline.py , fake_llm.py , logging_config.py ,
+settings.py , store.py , query_results.py .
+- [x] data/questions.csv with 20 rows; logs/pipeline.log with one JSON record per
+call.
+- [x] Pipeline runs end-to-end against the real OpenAI API for all 20 questions in batches of 5
+with retries.
+- [x] Two Pydantic models authored by you — Settings (with Field constraints) and
+RunSummary . You can demonstrate one ValidationError firing on a bad input.
+- [x] results.json written with summary + answers; results.db populated with rows in
+both runs and answers ; query_results.py returns matches for --runs and a substring
+search.
+- [x] .env is not tracked.
+- [x] docs/lab2-assistant-notes.md describes one improvement and the verification
+workflow.
+- [ ] Repo URL submitted in the tracker.
