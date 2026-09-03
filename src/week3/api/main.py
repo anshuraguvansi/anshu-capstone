@@ -65,7 +65,7 @@ async def stream_answer(question: str):
     pipelineanswer = await _pipeline_ask_llm(pipeline_question)
     for chunk in pipelineanswer.text.split(" "):
         yield chunk + " "
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.01)
 
 
 @app.post("/ask", response_class=StreamingResponse)
