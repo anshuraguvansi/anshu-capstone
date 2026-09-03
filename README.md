@@ -18,6 +18,7 @@ This project is using `UV` as depdency manager. To run this project do the follo
 2. Add `.env` file with a valid OpenAI key.
 3. Run `uv run --env-file .env python src/hello_llm.py`
 4. Run server `uv run --env-file .env uvicorn src.week3.api.main:app --reload --port 8000`
+5. Run Streamlit UI `streamlit run scr/week3/ui/app.py --server.port 8501`
 
 ## Week 1
 - [x] Set up repo + secrets discipline
