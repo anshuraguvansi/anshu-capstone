@@ -41,3 +41,16 @@ search.
 - [x] docs/lab2-assistant-notes.md describes one improvement and the verification
 workflow.
 - [ ] Repo URL submitted in the tracker.
+
+
+## Week 3
+- [x] api/main.py — FastAPI service with /ask (streaming), /ask_batched (non-
+streaming), /health.
+- [x] ui/app.py — Streamlit UI hitting /ask.
+- [x] tests/test_pipeline.py — 2 mocked unit tests (fake call + retry).
+- [x] tests/test_api.py — 2 API surface tests (validation + health).
+- [x] tests/conftest.py + pytest.ini — pytest config.
+- [x] scripts/stress_test.py — 50-parallel stress harness.
+- [x] docs/wk3-stress-notes.md — 4 stress findings documented.
+- [x] docs/adr/0002-api-contract.md — /v1/ask contract locked.
+- [x] Git history with at least 4 W3 commits.
