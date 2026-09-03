@@ -315,3 +315,18 @@
 {"ts": 1787825234.098, "level": "INFO", "msg": "asked: What is the purpose of a unit test?", "logger": "pipeline"}
 {"ts": 1787825234.101, "level": "INFO", "msg": "summary: {'started_at': 1787825200.2437649, 'elapsed_seconds': 33.85651898384094, 'n_questions': 20, 'n_successed': 20, 'n_retries_total': 0, 'total_cost_usd': 0.0049527, 'fail_rate': 0.0, 'use_fake': False}", "logger": "pipeline"}
 {"ts": 1787825234.122, "level": "INFO", "msg": "persisted run 2 with 20 answers to src/week2/results.db", "logger": "pipeline"}
+{"ts": 1788353903.261, "level": "INFO", "msg": "asked: What is RAG", "logger": "pipeline"}
+{"ts": 1788353991.554, "level": "INFO", "msg": "asked: What is RAG", "logger": "pipeline"}
+{"ts": 1788354045.841, "level": "INFO", "msg": "asked: What is RAG", "logger": "pipeline"}
+{"ts": 1788355106.847, "level": "INFO", "msg": "asked: How does the procurement approval proces", "logger": "pipeline"}
+{"ts": 1788355438.0, "level": "INFO", "msg": "asked: What is the leave policy?", "logger": "pipeline"}
+{"ts": 1788355511.14, "level": "INFO", "msg": "asked: What is the leave policy?", "logger": "pipeline"}
+{"ts": 1788355524.824, "level": "INFO", "msg": "asked: What is the leave policy?", "logger": "pipeline"}
+{"ts": 1788355539.764, "level": "INFO", "msg": "asked: What is the leave policy?", "logger": "pipeline"}
+{"ts": 1788355552.932, "level": "INFO", "msg": "asked: RAG", "logger": "pipeline"}
+{"ts": 1788355563.135, "level": "INFO", "msg": "asked: RAG", "logger": "pipeline"}
+{"ts": 1788422589.991, "level": "INFO", "msg": "asked: \"What is the leave policy?\"", "logger": "pipeline"}
+{"ts": 1788422643.873, "level": "INFO", "msg": "asked: fastapi", "logger": "pipeline"}
+{"ts": 1788422660.611, "level": "INFO", "msg": "asked: gather", "logger": "pipeline"}
+{"ts": 1788422695.695, "level": "INFO", "msg": "asked: How does the procurement approval proces", "logger": "pipeline"}
+{"ts": 1788422741.211, "level": "INFO", "msg": "asked: rate How does the procurement approval p", "logger": "pipeline"}
