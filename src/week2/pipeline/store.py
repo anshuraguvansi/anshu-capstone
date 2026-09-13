@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import time
 from collections.abc import Iterable
@@ -32,12 +33,10 @@ CREATE TABLE IF NOT EXISTS answers (
 """
 
 
-def connect(path: str | Path = "src/week2/results.db") -> sqlite3.Connection:
+def connect(path: str | Path = "data/results.db") -> sqlite3.Connection:
     """Open (or create) the database, ensure both tables exist, return the connection."""
-    con = sqlite3.connect(path)
-    con.executescript(SCHEMA)
-    con.commit()
-    return con
+    ensure_schema(path)
+    return sqlite3.connect(path)
 
 
 def write_run(con: sqlite3.Connection, summary: RunSummary) -> int:
@@ -76,6 +75,44 @@ def write_answers(
     )
     con.commit()
     return len(rows)
+
+
+def save_answer(
+    conn: sqlite3.Connection,
+    *,
+    run_id: int,
+    question: str,
+    content: str,
+    retries: int,
+    cost_usd: float,
+    model: str,
+    confidence: float,
+    sources: list[str],
+    schema_version: str = "v1",
+) -> int:
+    """Insert one row and return its rowid."""
+    cur = conn.execute(
+        """
+        INSERT INTO answers (
+            run_id, question, answer, retries, cost_usd, model,
+            confidence, sources_json, schema_version, ts
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            run_id,
+            question,
+            content,
+            retries,
+            cost_usd,
+            model,
+            confidence,
+            json.dumps(sources),
+            schema_version,
+            time.time(),
+        ),
+    )
+    return cur.lastrowid
 
 
 # Columns added in W4. Each entry: (column_name, column_def).

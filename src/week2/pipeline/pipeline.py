@@ -14,6 +14,7 @@ from collections.abc import AsyncIterator
 
 from openai import AsyncOpenAI
 
+from .fake_llm import FakeLLMError, fake_ask_llm
 
 # W4: Structured output tool schema
 # ─── Tool schema for structured outputs ─────────────────────────────────────
@@ -49,14 +50,15 @@ ANSWER_TOOL: dict = {
     },
 }
 
-_settings_for_import = Settings()
 
-if _settings_for_import.use_fake:
-    from .fake_llm import FakeLLMError, fake_ask_llm
-else:
-    from openai import AsyncOpenAI
+# _settings_for_import = Settings()
 
-    _client = AsyncOpenAI()
+# if _settings_for_import.use_fake:
+#     from .fake_llm import FakeLLMError, fake_ask_llm
+# else:
+#     from openai import AsyncOpenAI
+
+#     _client = AsyncOpenAI()
 
 
 logger = get_logger("pipeline")
@@ -95,43 +97,45 @@ def summarize_run(
 # ─────────────────────────────────────────────────────────────────────────────
 # single LLM call
 # ─────────────────────────────────────────────────────────────────────────────
-async def ask_llm(q: Question, fail_rate: float = 0.0) -> Answer:
+async def ask_llm(q: Question, settings: Settings | None = None) -> Answer:
     """One LLM call. Branches on Settings.use_fake."""
-    if _settings_for_import.use_fake:
-        ans = await fake_ask_llm(q, fail_rate=fail_rate)
-    else:
-        resp = await _client.chat.completions.create(
-            model=_settings_for_import.model,
-            messages=[{"role": "user", "content": q.text}],
-            tools=[ANSWER_TOOL],
-            tool_choice={
-                "type": "function",
-                "function": {"name": "answer_question"},
-            },
-        )
-        usage = resp.usage
-        prompt_tokens = usage.prompt_tokens if usage is not None else 0
-        completion_tokens = usage.completion_tokens if usage is not None else 0
+    settings = settings or Settings()
 
-        # Parse the tool call's structured arguments.
-        tool_calls = resp.choices[0].message.tool_calls or []
-        if not tool_calls:
-            # Defensive — should not happen because tool_choice forces it,
-            # but if a provider misbehaves we want a clear error.
-            raise RuntimeError("LLM did not call the answer_question tool")
-        args_json = tool_calls[0].function.arguments
-        args = json.loads(args_json)
+    if settings.use_fake:
+        content = await fake_ask_llm(q)
+        return Answer(text=content.text, question=q.text, cost_usd=0.0, retries=0)
 
-        ans = Answer(
-            question=q.text,
-            text=args["content"],
-            cost_usd=compute_cost_usd(
-                _settings_for_import.model, prompt_tokens, completion_tokens
-            ),
-            confidence=args.get("confidence", 1.0),
-            sources=args.get("sources", []),
-            schema_version="v1",
-        )
+    client = AsyncOpenAI()
+    resp = await client.chat.completions.create(
+        model=settings.model,
+        messages=[{"role": "user", "content": q.text}],
+        tools=[ANSWER_TOOL],
+        tool_choice={
+            "type": "function",
+            "function": {"name": "answer_question"},
+        },
+    )
+    usage = resp.usage
+    prompt_tokens = usage.prompt_tokens if usage is not None else 0
+    completion_tokens = usage.completion_tokens if usage is not None else 0
+
+    # Parse the tool call's structured arguments.
+    tool_calls = resp.choices[0].message.tool_calls or []
+    if not tool_calls:
+        # Defensive — should not happen because tool_choice forces it,
+        # but if a provider misbehaves we want a clear error.
+        raise RuntimeError("LLM did not call the answer_question tool")
+    args_json = tool_calls[0].function.arguments
+    args = json.loads(args_json)
+
+    ans = Answer(
+        question=q.text,
+        text=args["content"],
+        cost_usd=compute_cost_usd(settings.model, prompt_tokens, completion_tokens),
+        confidence=args.get("confidence", 1.0),
+        sources=args.get("sources", []),
+        schema_version="v1",
+    )
     logger.info(f"asked: {q.text[:40]}")
     return ans
 

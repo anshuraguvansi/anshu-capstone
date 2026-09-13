@@ -11,7 +11,7 @@ from src.week2.pipeline.store import ensure_schema
 
 
 def main(argv: list[str]) -> int:
-    db_path = Path(argv[1]) if len(argv) > 1 else Path("src/week2/results.db")
+    db_path = Path(argv[1]) if len(argv) > 1 else Path("data/results.db")
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Snapshot the columns before, for the user-facing summary.

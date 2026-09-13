@@ -33,7 +33,7 @@ def search_answers(con: sqlite3.Connection, pattern: str) -> None:
 
 
 def main() -> None:
-    con = sqlite3.connect("src/week2/results.db")
+    con = sqlite3.connect("data/results.db")
     if len(sys.argv) > 1 and sys.argv[1] == "--runs":
         show_runs(con)
     else:
