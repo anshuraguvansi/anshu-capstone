@@ -439,3 +439,4 @@
 {"ts": 1789294398.647, "level": "INFO", "msg": "asked: What is RAG?", "logger": "pipeline"}
 {"ts": 1789294507.364, "level": "INFO", "msg": "asked: What is RAG, in two sentences?", "logger": "pipeline"}
 {"ts": 1789294955.004, "level": "INFO", "msg": "asked: What is RAG, in two sentences?", "logger": "pipeline"}
+{"ts": 1789297630.491, "level": "INFO", "msg": "asked: What is RAG in two sentences?", "logger": "pipeline"}

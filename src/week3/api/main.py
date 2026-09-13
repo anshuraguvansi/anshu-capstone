@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from src.week2.pipeline.pipeline import ask_llm as _pipeline_ask_llm
 from src.week2.pipeline.pipeline import Question as _PipelineQuestion
+from src.week2.pipeline.pipeline import stream_answer as _pipeline_stream_answer
 
 
 logging.basicConfig(
@@ -68,14 +69,16 @@ async def health():
     return {"status": "ok"}
 
 
-async def stream_answer(question: str):
-    pipeline_question = _PipelineQuestion(text=question)
-    pipelineanswer = await _pipeline_ask_llm(pipeline_question)
-    for chunk in pipelineanswer.text.split(" "):
-        yield chunk + " "
-        await asyncio.sleep(0.01)
+# async def stream_answer(question: str):
+#     pipeline_question = _PipelineQuestion(text=question)
+#     pipelineanswer = await _pipeline_ask_llm(pipeline_question)
+#     for chunk in pipelineanswer.text.split(" "):
+#         yield chunk + " "
+#         await asyncio.sleep(0.01)
 
 
 @app.post("/ask", response_class=StreamingResponse)
 async def ask(question: Question):
-    return StreamingResponse(stream_answer(question.question), media_type="text/plain")
+    return StreamingResponse(
+        _pipeline_stream_answer(question.question), media_type="text/plain"
+    )

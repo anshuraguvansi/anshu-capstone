@@ -12,18 +12,18 @@ Public regulatory PDFs (a SEBI / RBI / GDPR document set), source: https://www.s
 choice)
 - `docs/runs/` — saved LLM outputs for evidence and reference
 
-## Setup 
+## Project Setup 
 This project is using `UV` as depdency manager. To run this project do the following:
 1. Use `uv sync` : install dependecies and setup the virtual environment.
 2. Add `.env` file with a valid OpenAI key.
-3. Run `uv run --env-file .env python src/hello_llm.py`
-4. Run server `uv run --env-file .env uvicorn src.week3.api.main:app --reload --port 8000`
-5. Run Streamlit UI `streamlit run src/week3/ui/app.py --server.port 8501`
+
 
 ## Week 1
 - [x] Set up repo + secrets discipline
 - [x] Build `hello_llm.py` (Lab Step 2)
 - [ ] Write ADR v1 (Lab Step 3)
+
+`uv run --env-file .env python src/hello_llm.py`
 
 ## Week 2
 - [x] src/pipeline/ package with pipeline.py , fake_llm.py , logging_config.py ,
@@ -54,3 +54,10 @@ streaming), /health.
 - [x] docs/wk3-stress-notes.md — 4 stress findings documented.
 - [x] docs/adr/0002-api-contract.md — /v1/ask contract locked.
 - [x] Git history with at least 4 W3 commits.
+
+Run server `uv run --env-file .env uvicorn src.week3.api.main:app --reload --port 8000`
+Run Streamlit UI `streamlit run src/week3/ui/app.py --server.port 8501`
+
+
+## Week 4
+- [x] additive changes in W3

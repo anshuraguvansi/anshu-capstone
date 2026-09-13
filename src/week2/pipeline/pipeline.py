@@ -4,9 +4,15 @@ import json
 import time
 from pathlib import Path
 
+from .cost import compute_cost_usd
+
 from .logging_config import get_logger
 from .settings import Settings, RunSummary
 from .models import Answer, Question
+
+from collections.abc import AsyncIterator
+
+from openai import AsyncOpenAI
 
 
 # W4: Structured output tool schema
@@ -106,7 +112,6 @@ async def ask_llm(q: Question, fail_rate: float = 0.0) -> Answer:
         usage = resp.usage
         prompt_tokens = usage.prompt_tokens if usage is not None else 0
         completion_tokens = usage.completion_tokens if usage is not None else 0
-        cost_usd = prompt_tokens * 0.00000015 + completion_tokens * 0.00000060
 
         # Parse the tool call's structured arguments.
         tool_calls = resp.choices[0].message.tool_calls or []
@@ -120,7 +125,9 @@ async def ask_llm(q: Question, fail_rate: float = 0.0) -> Answer:
         ans = Answer(
             question=q.text,
             text=args["content"],
-            cost_usd=cost_usd,
+            cost_usd=compute_cost_usd(
+                _settings_for_import.model, prompt_tokens, completion_tokens
+            ),
             confidence=args.get("confidence", 1.0),
             sources=args.get("sources", []),
             schema_version="v1",
@@ -170,6 +177,39 @@ async def run_in_batches(
         batch_results = await run_batch(batch, fail_rate=fail_rate)
         out.extend(batch_results)
     return out
+
+
+# ─── Streaming endpoint ─────────────────────────────────────────────────────
+async def stream_answer(
+    question: str, settings: Settings | None = None
+) -> AsyncIterator[str]:
+    """Yield content tokens as they arrive from the LLM.
+
+    Real OpenAI streaming — no asyncio.sleep, no word-splitting.
+    """
+    settings = settings or Settings()
+
+    if settings.use_fake:
+        full = await fake_ask_llm(question)
+        for word in full.split(" "):
+            await asyncio.sleep(0.05)
+            yield word + " "
+        return
+
+    client = AsyncOpenAI()
+
+    stream = await client.chat.completions.create(
+        model=settings.model,
+        messages=[{"role": "user", "content": question}],
+        stream=True,
+    )
+
+    async for chunk in stream:
+        if not chunk.choices:
+            continue
+        delta = chunk.choices[0].delta
+        if delta.content:
+            yield delta.content
 
 
 # ─────────────────────────────────────────────────────────────────────────────

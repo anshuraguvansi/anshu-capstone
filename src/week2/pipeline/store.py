@@ -3,7 +3,7 @@ import time
 from collections.abc import Iterable
 from pathlib import Path
 
-from .pipeline import Answer
+from .models import Answer
 from .settings import RunSummary
 
 SCHEMA = """
@@ -76,3 +76,32 @@ def write_answers(
     )
     con.commit()
     return len(rows)
+
+
+# Columns added in W4. Each entry: (column_name, column_def).
+# Applied via ALTER TABLE only if missing — so the migration is safe to rerun.
+_W4_NEW_COLUMNS = [
+    ("model", "TEXT"),
+    ("confidence", "REAL"),
+    ("sources_json", "TEXT"),  # list[str] stored as JSON
+    ("schema_version", "TEXT DEFAULT 'v1'"),
+]
+
+
+def ensure_schema(db_path: str | Path) -> None:
+    """Create answers table if missing, then add any missing W4 columns.
+
+    Safe to call on an empty file, on a W2/W3 db, or on a fully-migrated db.
+    """
+    conn = sqlite3.connect(str(db_path))
+    try:
+        conn.executescript(SCHEMA)
+        # Read current columns.
+        cur = conn.execute("PRAGMA table_info(answers)")
+        existing = {row[1] for row in cur.fetchall()}
+        for col_name, col_def in _W4_NEW_COLUMNS:
+            if col_name not in existing:
+                conn.execute(f"ALTER TABLE answers ADD COLUMN {col_name} {col_def}")
+        conn.commit()
+    finally:
+        conn.close()
