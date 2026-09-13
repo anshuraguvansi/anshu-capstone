@@ -6,26 +6,51 @@ from pathlib import Path
 
 from .logging_config import get_logger
 from .settings import Settings, RunSummary
+from .models import Answer, Question
 
+
+# W4: Structured output tool schema
+# ─── Tool schema for structured outputs ─────────────────────────────────────
+ANSWER_TOOL: dict = {
+    "type": "function",
+    "function": {
+        "name": "answer_question",
+        "description": (
+            "Return a structured answer with content, confidence, and sources."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "description": "The answer in 2-4 sentences.",
+                },
+                "confidence": {
+                    "type": "number",
+                    "description": "How confident you are in the answer, 0.0 to 1.0.",
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": (
+                        "Source identifiers or URLs you used. Empty list is fine "
+                        "if you used general knowledge."
+                    ),
+                },
+            },
+            "required": ["content", "confidence", "sources"],
+        },
+    },
+}
 
 _settings_for_import = Settings()
 
 if _settings_for_import.use_fake:
-    from .fake_llm import Answer, FakeLLMError, Question, fake_ask_llm
+    from .fake_llm import FakeLLMError, fake_ask_llm
 else:
     from openai import AsyncOpenAI
-    from pydantic import BaseModel
 
     _client = AsyncOpenAI()
-
-    class Question(BaseModel):
-        text: str
-
-    class Answer(BaseModel):
-        question: str
-        text: str
-        cost_usd: float
-        retries: int = 0
 
 
 logger = get_logger("pipeline")
@@ -72,15 +97,33 @@ async def ask_llm(q: Question, fail_rate: float = 0.0) -> Answer:
         resp = await _client.chat.completions.create(
             model=_settings_for_import.model,
             messages=[{"role": "user", "content": q.text}],
+            tools=[ANSWER_TOOL],
+            tool_choice={
+                "type": "function",
+                "function": {"name": "answer_question"},
+            },
         )
         usage = resp.usage
         prompt_tokens = usage.prompt_tokens if usage is not None else 0
         completion_tokens = usage.completion_tokens if usage is not None else 0
         cost_usd = prompt_tokens * 0.00000015 + completion_tokens * 0.00000060
+
+        # Parse the tool call's structured arguments.
+        tool_calls = resp.choices[0].message.tool_calls or []
+        if not tool_calls:
+            # Defensive — should not happen because tool_choice forces it,
+            # but if a provider misbehaves we want a clear error.
+            raise RuntimeError("LLM did not call the answer_question tool")
+        args_json = tool_calls[0].function.arguments
+        args = json.loads(args_json)
+
         ans = Answer(
             question=q.text,
-            text=resp.choices[0].message.content,
+            text=args["content"],
             cost_usd=cost_usd,
+            confidence=args.get("confidence", 1.0),
+            sources=args.get("sources", []),
+            schema_version="v1",
         )
     logger.info(f"asked: {q.text[:40]}")
     return ans

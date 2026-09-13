@@ -6,22 +6,7 @@ pipeline doesn't know which path it's on — flip Settings.use_fake to swap.
 
 import asyncio
 import random
-
-from pydantic import BaseModel
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Domain models — reused across the package
-# ─────────────────────────────────────────────────────────────────────────────
-class Question(BaseModel):
-    text: str
-
-
-class Answer(BaseModel):
-    question: str
-    text: str
-    cost_usd: float
-    retries: int = 0
+from .models import Answer, Question
 
 
 class FakeLLMError(Exception):

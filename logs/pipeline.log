@@ -434,3 +434,8 @@
 {"ts": 1788433261.864, "level": "INFO", "msg": "asked: What is the leave policy?", "logger": "pipeline"}
 {"ts": 1788433262.27, "level": "INFO", "msg": "asked: How do I file a reimbursement claim?", "logger": "pipeline"}
 {"ts": 1788433263.429, "level": "INFO", "msg": "asked: How does the procurement approval proces", "logger": "pipeline"}
+{"ts": 1789292511.329, "level": "INFO", "msg": "asked: What is Rag", "logger": "pipeline"}
+{"ts": 1789294397.187, "level": "INFO", "msg": "asked: What is RAG?", "logger": "pipeline"}
+{"ts": 1789294398.647, "level": "INFO", "msg": "asked: What is RAG?", "logger": "pipeline"}
+{"ts": 1789294507.364, "level": "INFO", "msg": "asked: What is RAG, in two sentences?", "logger": "pipeline"}
+{"ts": 1789294955.004, "level": "INFO", "msg": "asked: What is RAG, in two sentences?", "logger": "pipeline"}

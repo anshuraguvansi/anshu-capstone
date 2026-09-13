@@ -3,7 +3,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.week2.pipeline.pipeline import ask_llm as _pipeline_ask_llm
 from src.week2.pipeline.pipeline import Question as _PipelineQuestion
@@ -29,6 +29,11 @@ class Answer(BaseModel):
     cost_usd: float
     retries: int
 
+    # W4 additive fields — defaults make them backward-compatible
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    sources: list[str] = Field(default_factory=list)
+    schema_version: str = "v1"
+
 
 app = FastAPI(
     title="Anshu Capstone API",
@@ -51,6 +56,9 @@ async def ask_batched(question: Question) -> Answer:
         content=pipelineanswer.text,
         cost_usd=pipelineanswer.cost_usd,
         retries=pipelineanswer.retries,
+        confidence=pipelineanswer.confidence,
+        sources=pipelineanswer.sources,
+        schema_version=pipelineanswer.schema_version,
     )
 
 
