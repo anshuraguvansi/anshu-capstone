@@ -60,4 +60,20 @@ Run Streamlit UI `streamlit run src/week3/ui/app.py --server.port 8501`
 
 
 ## Week 4
-- [x] additive changes in W3
+- [x] Extended the public `Answer` response additively with `confidence`,
+	`sources`, and `schema_version` while keeping the W3 fields unchanged.
+- [x] Added an idempotent SQLite schema migration and persisted model metadata,
+	confidence, sources, schema version, run ID, and timestamp for each answer.
+- [x] Added `scripts/migrate_store.py` to migrate an existing results database.
+- [x] Added `scripts/compare_models.py` to run the same question set through
+	`gpt-4o-mini` and `gpt-4o`, record each run, and print cost and timing totals.
+- [x] Compared 21 questions: `gpt-4o-mini` cost $0.000079 per answer, while
+	`gpt-4o` cost $0.001597 per answer (about 20.1x more).
+- [x] Documented the comparison in `docs/lab4-model-comparison.md` and extended
+	`docs/adr/0002-api-contract.md` with schema-versioning and cost-budget rules.
+
+Run the database migration:
+`uv run python scripts/migrate_store.py data/results.db`
+
+Compare models:
+`uv run --env-file .env python scripts/compare_models.py`
