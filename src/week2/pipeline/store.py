@@ -30,6 +30,22 @@ CREATE TABLE IF NOT EXISTS answers (
     ts        REAL    NOT NULL,
     FOREIGN KEY (run_id) REFERENCES runs(id)
 );
+
+CREATE TABLE eval_runs (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+golden_id TEXT NOT NULL,
+question TEXT NOT NULL,
+candidate_answer TEXT NOT NULL,
+ideal_answer TEXT NOT NULL,
+candidate_model TEXT NOT NULL,
+judge_model TEXT NOT NULL,
+accuracy INTEGER NOT NULL,
+groundedness INTEGER NOT NULL,
+format INTEGER NOT NULL,
+reasoning TEXT NOT NULL,
+eval_run_label TEXT DEFAULT 'eval-run-001',
+created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 
