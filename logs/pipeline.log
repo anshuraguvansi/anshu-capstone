@@ -549,3 +549,4 @@
 {"ts": 1789304816.532, "level": "INFO", "msg": "asked: How does a Python virtual environment he", "logger": "pipeline"}
 {"ts": 1789304818.136, "level": "INFO", "msg": "asked: What does \"rate limiting\" mean in the co", "logger": "pipeline"}
 {"ts": 1789304819.891, "level": "INFO", "msg": "asked: Name three reasons an LLM might hallucin", "logger": "pipeline"}
+{"ts": 1789462939.01, "level": "INFO", "msg": "asked: What is RAG?", "logger": "pipeline"}

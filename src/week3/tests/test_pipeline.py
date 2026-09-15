@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from src.week2.pipeline.fake_llm import Question, Answer, FakeLLMError
+from src.week2.pipeline.settings import Settings
 
 
 @pytest.mark.asyncio
@@ -18,7 +19,10 @@ async def test_ask_llm_calls_fake_once():
     ) as m:
         from src.week2.pipeline.pipeline import ask_llm
 
-        result = await ask_llm(q=Question(text="What is the leave policy?"))
+        result = await ask_llm(
+            q=Question(text="What is the leave policy?"),
+            settings=Settings(use_fake=True),
+        )
 
     assert m.call_count == 1
     assert result.text == "mock response"
@@ -28,7 +32,7 @@ async def test_ask_llm_calls_fake_once():
 async def test_retry_three_times_on_failure():
     with (
         patch(
-            "src.week2.pipeline.pipeline.fake_ask_llm",
+            "src.week2.pipeline.pipeline.ask_llm",
             AsyncMock(side_effect=FakeLLMError("simulated")),
         ) as m_call,
         patch("src.week2.pipeline.pipeline.asyncio.sleep", AsyncMock()),
