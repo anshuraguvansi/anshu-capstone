@@ -1,5 +1,28 @@
-## Project Setup 
-This project is using `uv` as depdency manager. To run this project do the following:
-1. cd in the mp1 folder
-1. Use `uv sync` : install dependecies and setup the virtual environment.
-2. Add `.env` file with a valid OpenAI key.
+# MP1: Prompt Lab
+
+MP1 explores prompt strategies for extracting structured information from job
+postings. The project uses the OpenAI API, Pydantic models, and `uv` for
+dependency management.
+
+## Prerequisites
+
+- Python 3.14 or newer
+- [`uv`](https://docs.astral.sh/uv/)
+- An OpenAI API key with access to the configured model
+
+## Setup
+
+From the repository root:
+
+```bash
+cd mp1
+uv sync
+```
+
+Create a `.env` file inside `mp1/`:
+
+```env
+OPENAI_API_KEY=your-api-key-here
+```
+
+Do not commit `.env` or share the API key.
