@@ -26,3 +26,14 @@ OPENAI_API_KEY=your-api-key-here
 ```
 
 Do not commit `.env` or share the API key.
+
+## Run
+
+```bash
+uv run --env-file .env python mp1_prompt_lab.py
+```
+
+## Results
+
+- `mp1_comparison.md` contains the experiment results and strategy comparison.
+- `mp1_writeup.md` contains the reflection answers.

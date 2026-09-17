@@ -4,16 +4,15 @@ import time
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
-from openai import APIError, AsyncOpenAI
-from pydantic import BaseModel, ValidationError
+from openai import APIError, AsyncOpenAI, ChatCompletion
+from pydantic import BaseModel, Field, ValidationError
 
 # ************************************************************
-#                       Project Setup
+#                       Model & Cost Setup
 # ************************************************************
-
-client = AsyncOpenAI()
 
 # Cost rates ($ per token)
 RATES = {
@@ -23,6 +22,8 @@ RATES = {
 
 
 class Model(StrEnum):
+    """Enumeration of available language models and their associated token costs."""
+
     GPT_4O_MINI = "gpt-4o-mini"
     GPT_4O = "gpt-4o"
 
@@ -41,11 +42,15 @@ class Model(StrEnum):
 
 
 class JobSnippet(BaseModel):
+    """Data model for a job snippet."""
+
     id: str
     snippet: str
 
 
 class GoldenSnippet(BaseModel):
+    """Data model for a golden snippet."""
+
     id: str
     company: str
     role: str
@@ -59,6 +64,7 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 def load_job_snippets(
     file_path: str | Path = DATA_DIR / "job_snippets.jsonl",
 ) -> list[JobSnippet]:
+    """Load job snippets from a JSONL file."""
     with open(file_path, "r") as f:
         data = [json.loads(line) for line in f if line.strip()]
     return [JobSnippet(**item) for item in data]
@@ -67,6 +73,7 @@ def load_job_snippets(
 def load_golden_snippets(
     file_path: str | Path = DATA_DIR / "golden_set.jsonl",
 ) -> list[GoldenSnippet]:
+    """Load golden snippets from a JSONL file."""
     with open(file_path, "r") as f:
         data = [json.loads(line) for line in f if line.strip()]
     return [GoldenSnippet(**item) for item in data]
@@ -75,12 +82,13 @@ def load_golden_snippets(
 # ************************************************************
 #                       Prompt Strategies
 # ************************************************************
-def prompt_zero_shot(snippet: str):
+def prompt_zero_shot(snippet: str) -> list[dict[str, str]]:
+    """Generate a zero-shot prompt for extracting job information."""
     return [
         {
             "role": "system",
             "content": """
-            Extract the role, company, and years of experience required from the job snippet.
+            Extract the role, company, and years of experience required from the job snippet in JSON format.
             """,
         },
         {
@@ -90,28 +98,33 @@ def prompt_zero_shot(snippet: str):
     ]
 
 
-def prompt_few_shot(snippet: str):
+def prompt_few_shot(snippet: str) -> list[dict[str, str]]:
+    """Generate a few-shot prompt for extracting job information."""
     return [
         {
             "role": "system",
             "content": """
-            Extract the role, company, and years of experience required from the job snippet.
+            Extract the role, company, and years of experience required from the job snippet in JSON format.
             
             Example:
             <job_snippet>Software Engineer at OpenAI, 3 years experience required</job_snippet>
-            <extracted_data>
-                <role>Software Engineer</role>
-                <company>OpenAI</company>
-                <years_experience_required>3</years_experience_required>
-            </extracted_data>
+            <output_format>
+                {
+                    "role": "Software Engineer",
+                    "company": "OpenAI",
+                    "years_experience_required": 3
+                }
+            </output_format>
             
             Another Example:
             <job_snippet>Data Scientist at Google</job_snippet>
-            <extracted_data>
-                <role>Data Scientist</role>
-                <company>Google</company>
-                <years_experience_required>None</years_experience_required>
-            </extracted_data>
+            <output_format>
+                {
+                    "role": "Data Scientist",
+                    "company": "Google",
+                    "years_experience_required": null
+                }
+            </output_format>
             """,
         },
         {
@@ -121,20 +134,21 @@ def prompt_few_shot(snippet: str):
     ]
 
 
-def prompt_structured(snippet: str):
+def prompt_structured(snippet: str) -> list[dict[str, str]]:
+    """Generate a structured prompt for extracting job information in JSON format."""
     return [
         {
             "role": "system",
             "content": """
-            You are a job posting analyst. Extract the role, company, and years of experience required from the job snippet in JSON format.
+            You are an expert job posting analyst. Extract the role, company, and years of experience required from the job snippet in JSON format.
             
-            <output>
+            <output_format>
                {
                    "role": string | null,
                    "company": string | null,
                    "years_experience_required": int | null
                }
-            </output>
+            </output_format>
             """,
         },
         {
@@ -144,12 +158,21 @@ def prompt_structured(snippet: str):
     ]
 
 
-def prompt_cot(snippet: str):
+def prompt_cot(snippet: str) -> list[dict[str, str]]:
+    """Generate a chain-of-thought prompt for extracting job information in JSON format."""
     return [
         {
             "role": "system",
             "content": """
-            You are a job posting analyst. Analyze the job posting carefully and extract the role, company, and years of experience required. Provide the output in JSON format.
+            You are an expert job posting analyst. Analyze the job posting carefully and extract the role, company, and years of experience required, perform an internal verification pass to ensure the accuracy of the extracted information. Provide the output in JSON format.
+            
+            <output_format>
+               {
+                   "role": string | null,
+                   "company": string | null,
+                   "years_experience_required": int | null
+               }
+            </output_format>
             """,
         },
         {
@@ -160,6 +183,8 @@ def prompt_cot(snippet: str):
 
 
 class PromptStrategy(StrEnum):
+    """Enumeration of different prompt strategies for job information extraction."""
+
     ZERO_SHOT = "zero_shot"
     FEW_SHOT = "few_shot"
     STRUCTURED = "structured"
@@ -170,7 +195,7 @@ class PromptStrategy(StrEnum):
         """Returns a list of all PromptStrategy enum objects."""
         return [member for member in cls]
 
-    def build_prompt(self, prompt_input: str):
+    def build_prompt(self, prompt_input: str) -> list[dict[str, str]]:
         match self.value:
             case "zero_shot":
                 return prompt_zero_shot(prompt_input)
@@ -188,6 +213,8 @@ class PromptStrategy(StrEnum):
 
 
 class ExtractedData(BaseModel):
+    """Data model for storing extracted job information."""
+
     role: str | None = None
     company: str | None = None
     years_experience_required: int | None = None
@@ -195,23 +222,43 @@ class ExtractedData(BaseModel):
 
 @dataclass
 class ExecutionResult:
+    """Data model for storing the result of executing a prompt strategy on a job snippet."""
+
     strategy: str
     snippet: JobSnippet
     cost: float
     latency: float
-    raw_response: any
+    raw_response: str | None = None
     result: ExtractedData | None = None
 
 
+def parse_response(output: str | None) -> ExtractedData | None:
+    """Parse the raw response text from the LLM into an ExtractedData object."""
+
+    if output is None:
+        return None
+
+    try:
+        return ExtractedData.model_validate_json(output)
+    except ValidationError, TypeError:
+        return None
+
+
 def create_execution_result(func):
+    """Decorator to create an ExecutionResult from the output of a prompt execution function."""
+
     async def wrapper(
-        strategy: PromptStrategy, snippet: JobSnippet, model: Model
+        client: AsyncOpenAI,
+        strategy: PromptStrategy,
+        snippet: JobSnippet,
+        model: Model,
     ) -> ExecutionResult:
+        """Wrapper function that executes the prompt function and constructs an ExecutionResult."""
 
         start_time = time.time()
         try:
-            raw_response = await func(strategy, snippet, model)
-            result = raw_response.choices[0].message.parsed
+            raw_response = await func(client, strategy, snippet, model)
+            result = parse_response(raw_response.choices[0].message.content)
         except (APIError, ValidationError) as e:
             print(e)
             raw_response = None
@@ -232,7 +279,9 @@ def create_execution_result(func):
             snippet=snippet,
             cost=cost,
             latency=latency,
-            raw_response=raw_response,
+            raw_response=raw_response
+            if raw_response is None
+            else raw_response.choices[0].message.content,
             result=result,
         )
 
@@ -240,21 +289,24 @@ def create_execution_result(func):
 
 
 @create_execution_result
-async def run_one(strategy: PromptStrategy, snippet: JobSnippet, model: Model) -> any:
+async def run_one(
+    client: AsyncOpenAI, strategy: PromptStrategy, snippet: JobSnippet, model: Model
+) -> ChatCompletion:
+    """Execute a single prompt strategy on a job snippet and return the execution result."""
     prompt = strategy.build_prompt(snippet.snippet)
-    return await client.chat.completions.parse(
+    response = await client.chat.completions.create(
         model=model.value,
         messages=prompt,
         temperature=0.0,
-        response_format=ExtractedData,
     )
+    return response
 
 
-async def run_all():
+async def run_all(client: AsyncOpenAI) -> list[ExecutionResult]:
+    """Execute all prompt strategies on all job snippets and return a list of execution results."""
     snippets = load_job_snippets()
-    # return [await run_one(PromptStrategy.ZERO_SHOT, snippets[0], Model.GPT_4O_MINI)]
     tasks = [
-        run_one(strategy, snippet, Model.GPT_4O_MINI)
+        run_one(client, strategy, snippet, Model.GPT_4O_MINI)
         for strategy in PromptStrategy.all()
         for snippet in snippets
     ]
@@ -267,28 +319,38 @@ async def run_all():
 
 
 class EvaluationResult(BaseModel):
-    score: int
+    """Data model for storing the result of evaluating an extracted job snippet against the golden snippet."""
+
+    score: int = Field(ge=1, le=4)
     reasoning: str
 
 
 def score_accuracy(extracted: ExtractedData | None, gold: GoldenSnippet) -> int:
+    """Compute the accuracy score of the extracted data against the golden snippet."""
     if extracted is None:
         return 0
     score = 0
-    if extracted.result.role.lower().strip() == gold.role.lower().strip():
+    if extracted.role and extracted.role.lower().strip() == gold.role.lower().strip():
         score += 1
-    if extracted.result.company.lower().strip() == gold.company.lower().strip():
+    if (
+        extracted.company
+        and extracted.company.lower().strip() == gold.company.lower().strip()
+    ):
         score += 1
-    if extracted.result.years_experience_required == gold.years_experience_required:
+    if extracted.years_experience_required == gold.years_experience_required:
         score += 1
     return score
 
 
 async def score_llm_judge(
-    snippet_text: str, extracted: ExtractedData | None, gold: GoldenSnippet
+    client: AsyncOpenAI,
+    snippet_text: str,
+    extracted: ExtractedData | None,
+    gold: GoldenSnippet,
 ) -> int:
+    """Use an LLM to evaluate the extracted data against the golden snippet and return a score."""
     if extracted is None:
-        return 0
+        return 1
 
     system_prompt = """
     You are an expert quality assurance judge evaluating an information extraction system. 
@@ -301,7 +363,7 @@ async def score_llm_judge(
 
     Rubric:
     - 4 (Excellent): All three fields perfectly match the Golden Data.
-    - 3 (Good): Exactly two of the three fields match the Golden Data, and the third field is either empty or incorrect (but NOT fabricated/made up out of thin air).
+    - 3 (Good): Exactly two of the three fields match the Golden Data, and the third field is either empty or incorrect (but NOT fabricated/made up).
     - 2 (Fair): Exactly one of the three fields matches the Golden Data, OR one or more fields contain completely fabricated information not present in the Snippet Text.
     - 1 (Poor): None of the fields match the Golden Data, or the extraction is entirely unparsable/hallucinated.
 
@@ -322,7 +384,7 @@ async def score_llm_judge(
     """
 
     response = await client.chat.completions.parse(
-        model=Model.GPT_4O_MINI.value,
+        model=Model.GPT_4O.value,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -333,17 +395,22 @@ async def score_llm_judge(
     return response.choices[0].message.parsed.score
 
 
-async def evaluate_extraction():
+async def evaluate_extraction(client: AsyncOpenAI) -> list[dict[str, Any]]:
+    """Evaluate all extraction results against the golden snippets and return a list of evaluation scores and reasoning."""
+
     gold_snippets = load_golden_snippets()
-    results = await run_all()
+    results = await run_all(client)
     scores = []
     for result in results:
         gold = next((g for g in gold_snippets if g.id == result.snippet.id), None)
         if gold is None:
+            print(f"Warning: no golden record for {result.snippet.id}")
             continue
 
         accuracy = score_accuracy(result.result, gold)
-        score = await score_llm_judge(result.snippet.snippet, result.result, gold)
+        score = await score_llm_judge(
+            client, result.snippet.snippet, result.result, gold
+        )
         scores.append(
             {
                 "strategy": result.strategy,
@@ -362,7 +429,9 @@ async def evaluate_extraction():
 # ************************************************************
 
 
-def print_scores(scores):
+def print_scores(scores) -> None:
+    """Print the evaluation scores and a summary grouped by strategy."""
+
     df = pd.DataFrame(scores)
     print(df)
     summary = (
@@ -376,7 +445,15 @@ def print_scores(scores):
                 "latency_s": "median",
             }
         )
-        .round(3)
+        .round(
+            {
+                "accuracy": 2,
+                "parse_success": 2,
+                "llm_judge_score": 2,
+                "cost_usd": 6,
+                "latency_s": 3,
+            }
+        )
     )
     summary.columns = [
         "Accuracy (mean of 3)",
@@ -388,9 +465,11 @@ def print_scores(scores):
     print(summary)
 
 
-async def run():
-    results = await evaluate_extraction()
-    print(f"Got {len(results)} results.")
+async def run() -> None:
+    """Main entry point for running the evaluation and printing the results."""
+
+    async with AsyncOpenAI() as client:
+        results = await evaluate_extraction(client)
     print_scores(results)
 
 
