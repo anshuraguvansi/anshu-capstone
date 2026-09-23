@@ -82,3 +82,5 @@ Run the database migration:
 
 Compare models:
 `uv run --env-file .env python scripts/compare_models.py`
+
+Run server `uv run --env-file .env uvicorn src.week4.api.main:app --reload --port 8000`
