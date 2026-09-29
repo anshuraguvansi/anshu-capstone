@@ -6,7 +6,13 @@ The platform is intended for medical students and junior residents. It is a lear
 
 ## Dataset
 
-The data pipeline will automatically filter out records with invalid summaries or missing complaints, symptoms, or diagnoses. It will then select 100 eligible cases from the `AGBonnet/augmented-clinical-notes` dataset using a fixed random seed, so the same case set can be reproduced. The cases will not be reviewed or selected by hand.
+The data pipeline will automatically filter out records with invalid summaries or missing complaints, symptoms, or diagnoses. It will then select 200 eligible cases from the `AGBonnet/augmented-clinical-notes` dataset using a fixed random seed, so the same case set can be reproduced. The cases will not be reviewed or selected by hand.
+
+Select and save the highest-scoring 200 cases:
+
+`uv run python scripts/select_clinical_cases.py`
+
+The command writes the selected records and their quality metadata to `data/clinical_cases_200.jsonl`.
 
 ## Structure
 
@@ -84,3 +90,19 @@ Compare models:
 `uv run --env-file .env python scripts/compare_models.py`
 
 Run server `uv run --env-file .env uvicorn src.week4.api.main:app --reload --port 8000`
+
+
+## Week 5
+
+
+
+## Week 6
+- [x] Three indexes built, three eval labels in `rag_runs`
+- [x] A 3-row comparison table in your snapshot
+- [x] A one-line recommendation for next week's chunker
+- [x] sentence-transformers installed, model downloaded
+- [x] A parallel index `data/embeddings_local.json` built
+- [x] 20 golden questions run through local embeddings
+- [x] Side-by-side comparison table with at least 5 specific question
+  diffs noted
+- [x] One-paragraph recommendation
