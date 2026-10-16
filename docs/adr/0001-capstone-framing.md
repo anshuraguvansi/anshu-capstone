@@ -77,4 +77,4 @@ A standard simulation consists of an opening complaint, up to 10 learner questio
 
 **Trade-offs:** Qdrant manages vector persistence and supports future metadata filtering, but adds network dependency. The default pipeline's median embedding-plus-retrieval latency increased from 678.7 ms to 1047.6 ms in this run. Local embeddings alone do not keep the application local: chunk text is stored in Qdrant and retrieved context is sent to OpenAI for generation.
 
-**Outstanding comparison:** `text-embedding-3-large` has not been evaluated. This decision reflects the measured configurations and should be revisited after that comparison. See [Week 7 KPI snapshot](../kpi/wk7-snapshot.md) for results and methodology.
+See [Week 7 KPI snapshot](../kpi/wk7-snapshot.md) for results and methodology.

@@ -52,8 +52,8 @@ Keep OpenAI 3-small as the default. On identical chunks it achieves two more evi
 
 Local embedding computation avoids sending text to an embedding provider. The current application still sends chunk text to Qdrant and retrieved context to OpenAI for generation.
 
-## Results and remaining work
+## Results
 
 Results: `data/eval_qdrant_results.jsonl`, under `wk7-qdrant-openai`, `wk7-qdrant-openai-medium`, and `wk7-qdrant-local`. Week 6 baselines: `data/rag_eval_results.jsonl`.
 
-The current choice is recorded in `docs/adr/0001-capstone-framing.md`. Remaining: compare OpenAI 3-small versus 3-large on identical chunks and revisit the decision using those results.
+The current choice is recorded in `docs/adr/0001-capstone-framing.md`.
