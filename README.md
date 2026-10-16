@@ -106,3 +106,76 @@ Run server `uv run --env-file .env uvicorn src.week4.api.main:app --reload --por
 - [x] Side-by-side comparison table with at least 5 specific question
   diffs noted
 - [x] One-paragraph recommendation
+
+## Week 7
+
+- [x] Migrated cached OpenAI and MiniLM embeddings into separate Qdrant collections.
+- [x] Connected `/ask_batched` to Qdrant RAG with source citations and SQLite persistence.
+- [x] Evaluated all 30 golden questions using top-k 3 and the Week 6 evidence metric.
+- [x] Compared hosted and local embeddings on identical 500/50 chunks.
+- [x] Recorded results in [the W7 snapshot](docs/kpi/wk7-snapshot.md) and the decision in [the ADR](docs/adr/0001-capstone-framing.md).
+
+Default: OpenAI `text-embedding-3-small`, 800-character chunks with 80-character overlap, and cosine retrieval. It achieved 27/30 evidence hits and 30/30 source hits after migration.
+
+Run `uv sync`, then set these values in `.env`:
+
+```dotenv
+OPENAI_API_KEY=your-key
+QDRANT_URL=https://your-cluster-url
+QDRANT_API_KEY=your-qdrant-key
+```
+
+Migrate the saved Week 6 caches without regenerating embeddings:
+
+```bash
+# Default OpenAI collection: 75 chunks, 1536 dimensions
+uv run --env-file .env python scripts/migrate_to_qdrant.py
+
+# Local MiniLM collection: 116 chunks, 384 dimensions
+uv run --env-file .env python scripts/migrate_to_qdrant.py \
+  --index data/embeddings_local.json --collection capstone_chunks_local
+
+# OpenAI comparison collection: same 116 chunks as MiniLM
+uv run --env-file .env python scripts/migrate_to_qdrant.py \
+  --index data/embeddings_medium.json --collection capstone_chunks_openai_medium
+```
+
+`embeddings_large.json` contains large chunks embedded with `text-embedding-3-small`; the filename describes chunk size.
+
+Start the API and open `http://127.0.0.1:8000/docs`:
+
+```bash
+uv run --env-file .env uvicorn src.week7.api.main:app --reload --port 8000
+```
+
+Test `POST /ask_batched` with:
+
+```json
+{"question": "How did the 76-year-old man's weight change after six months of Ninjin'yoeito?"}
+```
+
+Expected information: an 8 kg weight increase, citing `case_2481`. The `/ask` streaming endpoint still uses the earlier pipeline.
+
+Evaluate Qdrant retrieval:
+
+```bash
+uv run --env-file .env python scripts/eval_qdrant.py \
+  --label wk7-qdrant-openai --collection capstone_chunks \
+  --index data/embeddings_large.json
+
+uv run --env-file .env python scripts/eval_qdrant.py \
+  --label wk7-qdrant-openai-medium --collection capstone_chunks_openai_medium \
+  --index data/embeddings_medium.json
+
+uv run --env-file .env python scripts/eval_qdrant.py \
+  --label wk7-qdrant-local --collection capstone_chunks_local \
+  --index data/embeddings_local.json --local true
+```
+
+Results are saved in `data/eval_qdrant_results.jsonl`; rerunning a label replaces its results while preserving other labels. The evaluator searches Qdrant, using `--index` for model and chunking metadata. Week 6 evaluation remains available through `scripts/run_rag_eval.py`.
+
+Run Week 7 tests:
+
+```bash
+uv run python -m pytest src/week7/tests -q
+```
