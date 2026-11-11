@@ -9,6 +9,8 @@ dependencies = [
     "httpx>=0.28.1",
     "numpy>=2.5.2",
     "openai>=3.1.0",
+    "presidio-analyzer>=2.2.362",
+    "presidio-anonymizer>=2.2.366",
     "pydantic>=2.13.4",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
@@ -17,4 +19,10 @@ dependencies = [
     "streamlit>=1.63.0",
     "tiktoken>=0.14.0",
     "uvicorn>=0.52.4",
+]
+
+[project.optional-dependencies]
+ingest = [
+    "presidio-analyzer",
+    "presidio-anonymizer",
 ]

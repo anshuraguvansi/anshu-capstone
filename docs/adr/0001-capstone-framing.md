@@ -78,3 +78,36 @@ A standard simulation consists of an opening complaint, up to 10 learner questio
 **Trade-offs:** Qdrant manages vector persistence and supports future metadata filtering, but adds network dependency. The default pipeline's median embedding-plus-retrieval latency increased from 678.7 ms to 1047.6 ms in this run. Local embeddings alone do not keep the application local: chunk text is stored in Qdrant and retrieved context is sent to OpenAI for generation.
 
 See [Week 7 KPI snapshot](../kpi/wk7-snapshot.md) for results and methodology.
+
+## W8 — JSONL ingestion + PII discipline
+
+**Decision:** I use `src/week8/ingest/pipeline.py` to ingest the clinical JSONL corpus into `capstone_chunks_v2`. Each case keeps its source ID. The current collection contains 10 cases and 75 chunks.
+
+**Ingestion pipeline steps:**
+
+1. Read JSONL cases, using `text` or `full_note` with `note` as a fallback.
+2. Scrub each case with regex + Presidio before chunking.
+3. Split into 800-character windows with 80-character overlap, keeping case boundaries.
+4. Add metadata: 12 stored fields including text, source IDs, dates, language and PII flag count.
+5. Embed with `text-embedding-3-small` (1536 dimensions).
+6. Upsert to Qdrant collection `capstone_chunks_v2` using stable point IDs and cosine distance.
+
+**PII detection:** Regex checks EMAIL, PHONE and EMP_ID. Presidio checks PERSON, email addresses, phone numbers, US SSNs, credit cards and IP addresses. Dates, ages, locations and organizations are kept as clinical context. I reviewed 10 chunks fetched with `scroll(limit=10)`; these were not randomly selected. See [the PII audit](../wk8-pii-audit.md).
+
+**Known gaps:** All 28 flags were false positives. Figure references and medical terms such as Brucella, Wright, Moxifloxacin and ANA were wrongly redacted. I need to fix the scrubber, check for missed PII and re-ingest the original cases. Metadata filtering is available but is not used in retrieval yet.
+
+**Data residency:**
+
+- Embeddings: OpenAI API; processing region not verified.
+- Vectors and chunk text: Qdrant Cloud; cluster region not verified.
+- LLM inference: OpenAI API; processing region not verified.
+- App layer: deployment location not recorded.
+- Data flow: the ingest process sends scrubbed text to OpenAI for embeddings and stores text and vectors in Qdrant. At query time, retrieved context goes to OpenAI for generation. Cross-jurisdictional flows depend on the regions above.
+
+**Rejected alternatives:**
+
+- Multiple document parsers: the corpus is JSONL only, so PDF, HTML and DOCX support was removed.
+- Structure-aware or semantic chunking: kept fixed character windows for this baseline; other strategies have not been evaluated.
+- Presidio alone: kept regex for explicit identifier patterns alongside Presidio. The hybrid still needs tuning for medical text.
+
+**Operational KPIs:** On the same 30 golden questions, source hit rate is 100% and evidence hit rate is 90%, unchanged from W7. Median embedding-plus-retrieval latency is 1038.4 ms, and mean query embedding cost is $0.000000374. Grounded response rate and generation cost were not measured. There were 28 PII flags and no confirmed PII removed. See [the W8 snapshot](../kpi/wk8-snapshot.md).

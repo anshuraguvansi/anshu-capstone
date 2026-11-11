@@ -179,3 +179,12 @@ Run Week 7 tests:
 ```bash
 uv run python -m pytest src/week7/tests -q
 ```
+
+## Week 8 
+- [x] `src/ingest/pipeline.py` exists and runs end-to-end without crashes
+- [x] `capstone_chunks_v2` collection exists in Qdrant with N points > 0
+- [x] `docs/wk8-pii-audit.md` filled in for 10 random chunks (real audit, not placeholder)
+- [x] `docs/kpi/wk8-snapshot.md` shows retrieval hit rate delta vs W7
+- [x] ADR extended with W8 section
+- [x] `qdrant_rag.py` retrieval works against v2 collection
+- [x] No real PII in any committed file 
