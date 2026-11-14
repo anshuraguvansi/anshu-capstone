@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-13",
+  "collection": "capstone_chunks_v2",
+  "points": 75,
+  "answer_model": "gpt-4o-mini",
+  "judge_model": "gpt-4o",
+  "questions": 30,
+  "grounded_responses": 29,
+  "grounded_response_rate": 0.9666666666666667,
+  "abstentions": 0,
+  "mean_accuracy": 3.566666666666667,
+  "retrieval_latency_p50_ms": 1005.7391250011278,
+  "answer_latency_p50_ms": 1861.8700210063253,
+  "retrieval_and_answer_latency_p50_ms": 3087.5550840137294,
+  "embedding_cost_per_query_usd": 3.7400000000000004e-07,
+  "answer_cost_per_query_usd": 0.00012333,
+  "retrieval_and_answer_cost_per_query_usd": 0.000123704,
+  "judge_cost_total_usd": 0.104165
+}

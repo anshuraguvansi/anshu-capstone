@@ -111,3 +111,41 @@ See [Week 7 KPI snapshot](../kpi/wk7-snapshot.md) for results and methodology.
 - Presidio alone: kept regex for explicit identifier patterns alongside Presidio. The hybrid still needs tuning for medical text.
 
 **Operational KPIs:** On the same 30 golden questions, source hit rate is 100% and evidence hit rate is 90%, unchanged from W7. Median embedding-plus-retrieval latency is 1038.4 ms, and mean query embedding cost is $0.000000374. Grounded response rate and generation cost were not measured. There were 28 PII flags and no confirmed PII removed. See [the W8 snapshot](../kpi/wk8-snapshot.md).
+
+## W9 — Hybrid retrieval + cross-encoder reranking
+
+**Decision:** Use hybrid retrieval with cross-encoder reranking for W9. Keep dense-only as the baseline.
+
+**Retrieval stack:**
+
+- BM25: `rank-bm25` (`BM25Okapi`).
+- Tokenization: lowercase alphanumeric tokens preserving internal hyphens, slashes, and underscores; leading slashes are dropped.
+- Dense model: `text-embedding-3-small`, 1536 dimensions, Qdrant cosine search on `capstone_chunks_v2`.
+- Fusion: RRF, k=60; top 10 results per retriever fused into 10 candidates.
+- Reranker: local `cross-encoder/ms-marco-MiniLM-L-6-v2`.
+- Output: top three chunks for generation; top five for precision measurement.
+
+**Rejected alternatives:**
+
+- Cohere Rerank API: adds a hosted dependency and API cost.
+- Weighted fusion: requires score normalization and weight tuning.
+- Larger cross-encoder: deferred pending evidence that it improves this corpus.
+- LlamaIndex: current retrieval does not need framework orchestration.
+
+**Operational KPIs:** Same 30 questions and collection, fresh dense and hybrid runs on 2026-11-13.
+
+| Metric | Dense-only | Hybrid+rerank | Delta |
+|---|---:|---:|---:|
+| Precision@3 | 0.289 | 0.289 | 0.000 |
+| Precision@5 | 0.187 | 0.193 | +0.007 |
+| Grounded response rate | 93.3% (28/30) | 96.7% (29/30) | +3.3 pp |
+| Estimated retrieval + answer cost/query | $0.000123984 | $0.000124399 | +$0.000000415 |
+| Retrieval latency p50 (ms) | 1856.9 | 2142.4 | +285.5 |
+
+See [the W9 snapshot](../kpi/wk9-snapshot.md) for methodology and results.
+
+**Known gaps to revisit:**
+
+- BM25 rebuilds from Qdrant on first use; persist or refresh the index as the corpus grows.
+- Combined BM25/reranker initialization took 16.8 seconds, excluded from query latency. Record execution device and stage timings before considering GPU or batching.
+- Review chunk labels after changes to the corpus, scrubbing, or chunking.
