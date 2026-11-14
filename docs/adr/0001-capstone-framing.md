@@ -149,3 +149,25 @@ See [the W9 snapshot](../kpi/wk9-snapshot.md) for methodology and results.
 - BM25 rebuilds from Qdrant on first use; persist or refresh the index as the corpus grows.
 - Combined BM25/reranker initialization took 16.8 seconds, excluded from query latency. Record execution device and stage timings before considering GPU or batching.
 - Review chunk labels after changes to the corpus, scrubbing, or chunking.
+
+## W10 — Caching + KB lifecycle
+
+**Decisions:**
+
+- **Semantic cache:** I reuse `data/results.db` with a 0.95 cosine threshold. SQLite scan-based lookup is enough for the current scale; I will consider Qdrant if the cache grows beyond 10K entries.
+- **OpenAI prompt cache:** Keep the system prompt first so eligible GPT-4o-mini requests can reuse a matching prefix automatically.
+- **Embeddings:** Reuse stored corpus vectors from the existing Qdrant setup. Query embeddings are still generated on each request.
+- **Tombstones:** Use `IsEmptyCondition` on `deleted_at` to match live chunks when the field is absent, null or an empty array. Filter by `source_id` because multiple cases share `cases.jsonl`.
+- **Update flow:** Mark old chunks deleted, insert replacements with fresh Qdrant UUIDs, then clear semantic and BM25 caches. Keep the existing `case_id#chunk_index` payload IDs.
+- **Audit access:** `dense_search(include_deleted=True)` includes old chunks for inspection. It does not reconstruct a specific past KB version.
+
+**Rejected alternatives:**
+
+- LLMLingua compression: deferred until I measure its effect on clinical groundedness.
+- Hosted semantic cache: SQLite covers the current scale without another service.
+- Per-source cache invalidation: clear the full cache for now to keep updates simple.
+- `IsNullCondition`: misses chunks where `deleted_at` is absent.
+
+**Operational KPIs:** On 30 golden questions, cold had 0 cache hits and warm had 30. Average cost/query fell from $0.000125003 cold to $0.000000374 warm, a 99.7% saving. Latency p50 fell from 4296 ms to 707 ms, and p95 from 5699 ms to 797 ms. Precision and groundedness were not remeasured. See [the W10 snapshot](../kpi/wk10-snapshot.md).
+
+**Known gaps:** No cache TTL; entries remain until cleared. Revisit cache size and per-source invalidation as usage grows. Bulk ingestion still needs cache invalidation, and updates in another process require the running API's BM25 cache to be refreshed or the API restarted.

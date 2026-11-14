@@ -196,4 +196,15 @@ uv run python -m pytest src/week7/tests -q
 - [x] [W9 KPI snapshot](docs/kpi/wk9-snapshot.md) shows Precision@3 and Precision@5 against the dense-only baseline, grounded response rate, cost, and latency.
 - [x] [Per-question comparison](docs/wk9-precision-delta.md) committed.
 - [x] [ADR](docs/adr/0001-capstone-framing.md) extended with W9 retrieval-stack decisions.
-```
+
+## Week 10
+
+- [x] `src/week10/rag/cache.py` exists; `lookup()` returns `None` on an empty cache, and `put()` + `lookup()` roundtrip works.
+- [x] `src/week10/rag/qdrant_rag.py`: `ask_rag()` returns `cache_hit=False` on the first call and `True` on the repeated call.
+- [x] `src/week10/ingest/pipeline.py`: `tombstone_source()` uses `IsEmptyCondition`.
+- [x] `ingest_or_update_source()` tombstones existing live chunks, inserts replacements and clears the cache.
+- [x] `src/week10/rag/retrieval.py`: `dense_search()` uses `_live_filter()` by default; `include_deleted=True` bypasses it.
+- [x] `scripts/update_document.py` runs end-to-end for `case_2481` from the clinical corpus.
+- [x] [W10 KPI snapshot](docs/kpi/wk10-snapshot.md) records cold vs warm cost and latency: 0/30 cold hits, 30/30 warm hits and 99.7% cost savings.
+- [x] [ADR](docs/adr/0001-capstone-framing.md) extended with W10 decisions.
+- [x] [Document update runbook](docs/runbooks/document_update.md) added.
