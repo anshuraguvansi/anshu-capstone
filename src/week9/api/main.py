@@ -10,11 +10,10 @@ from src.week9.pipeline.pipeline import stream_answer
 from src.week9.pipeline.settings import Settings
 from src.week9.pipeline.store import connect, save_answer
 from src.week9.rag import qdrant_rag
-from src.week9.rag.qdrant_store import QdrantStore, _get_client
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Capstone API — W7")
+app = FastAPI(title="Capstone API — W9")
 
 # Single Settings instance — read once at startup.
 _settings = Settings()
@@ -30,8 +29,7 @@ async def health() -> dict:
 @app.post("/ask_batched", response_model=Answer)
 def ask_batched(q: Question) -> Answer:
     """Answer using Qdrant context and persist the result to SQLite."""
-    store = QdrantStore(client=_get_client(), collection="capstone_chunks_v2")
-    result = qdrant_rag.ask_rag(q.question, store, settings=_settings)
+    result = qdrant_rag.ask_rag(q.question, settings=_settings)
     answer = Answer(
         content=result["answer"],
         sources=result["sources"],

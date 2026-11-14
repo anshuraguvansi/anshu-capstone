@@ -9,7 +9,7 @@ from qdrant_client.models import (
     PointStruct,
 )
 
-COLLECTION_NAME = "capstone_chunks"
+COLLECTION_NAME = "capstone_chunks_v2"
 EMBEDDING_DIM = 1536  # text-embedding-3-small
 
 

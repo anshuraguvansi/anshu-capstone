@@ -188,3 +188,12 @@ uv run python -m pytest src/week7/tests -q
 - [x] ADR extended with W8 section
 - [x] `qdrant_rag.py` retrieval works against v2 collection
 - [x] No real PII in any committed file 
+
+## Week 9
+
+- [x] `src/week9/rag/retrieval.py` implements BM25 + dense retrieval, RRF, and cross-encoder reranking with top-k results.
+- [x] `src/week9/rag/qdrant_rag.py` wired to use `retrieval.retrieve()` with top-three context and source citations.
+- [x] [W9 KPI snapshot](docs/kpi/wk9-snapshot.md) shows Precision@3 and Precision@5 against the dense-only baseline, grounded response rate, cost, and latency.
+- [x] [Per-question comparison](docs/wk9-precision-delta.md) committed.
+- [x] [ADR](docs/adr/0001-capstone-framing.md) extended with W9 retrieval-stack decisions.
+```

@@ -47,17 +47,21 @@ def _load_bm25():
     client = _get_client()
     all_points = []
     offset = None
-    while True:
-        batch, next_offset = client.scroll(
-            collection_name=COLLECTION_NAME,
-            limit=200,
-            offset=offset,
-            with_payload=True,
-        )
-        all_points.extend(batch)
-        if next_offset is None:
-            break
-        offset = next_offset
+    try:
+        while True:
+            batch, next_offset = client.scroll(
+                collection_name=COLLECTION_NAME,
+                limit=200,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            all_points.extend(batch)
+            if next_offset is None:
+                break
+            offset = next_offset
+    finally:
+        client.close()
 
     # Preserve order — index positions map to point ids
     corpus_texts = [p.payload.get("text", "") for p in all_points]
@@ -79,15 +83,18 @@ def bm25_search(query: str, k: int = 10) -> list[dict]:
 def dense_search(query: str, k: int = 10) -> list[dict]:
     """Dense retrieval — Qdrant cosine top-K."""
     openai = _get_openai()
-    client = _get_client()
     q_vec = (
         openai.embeddings.create(model="text-embedding-3-small", input=[query])
         .data[0]
         .embedding
     )
-    hits = client.query_points(
-        collection_name=COLLECTION_NAME, query=q_vec, limit=k
-    ).points
+    client = _get_client()
+    try:
+        hits = client.query_points(
+            collection_name=COLLECTION_NAME, query=q_vec, limit=k
+        ).points
+    finally:
+        client.close()
     return [
         {"id": str(h.id), "score": h.score, "doc": {**h.payload, "point_id": h.id}}
         for h in hits
